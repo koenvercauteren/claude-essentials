@@ -6,8 +6,8 @@ A unified development plugin for Claude Code with essential commands, skills, an
 
 This is a single, comprehensive plugin (`ce`) that provides:
 
-- **7 Commands** - Quick workflows accessible as `/ce:test`, `/ce:explain`, `/ce:commit`, etc.
-- **12 Skills** - Reusable development patterns accessed via `ce:writing-tests`, `ce:systematic-debugging`, etc.
+- **10 Commands** - Quick workflows accessible as `/ce:test`, `/ce:explain`, `/ce:commit`, etc.
+- **13 Skills** - Reusable development patterns accessed via `ce:writing-tests`, `ce:systematic-debugging`, etc.
 - **3 Agents** - Expert AI personas invoked as `@ce:architect`, `@ce:code-reviewer`, `@ce:documentation-writer`
 - **Session Hooks** - Automatic project configuration on startup
 - **Reference Templates** - ADR, PRD, and technical design templates
@@ -67,6 +67,9 @@ Quick workflows for everyday development tasks, accessed with `/ce:` prefix:
 - `/ce:refactor <target>` - Improve code quality
 - `/ce:review` - Get comprehensive code review
 - `/ce:commit` - Generate semantic commit messages
+- `/ce:deps [action]` - Audit and upgrade dependencies
+- `/ce:fix-issue <number>` - Fix a GitHub issue by number
+- `/ce:pr [base]` - Create a pull request with auto-generated description
 
 ### Skills
 
@@ -84,6 +87,7 @@ Reusable development patterns, accessed with `ce:` prefix:
 - `ce:refactoring-code` - Behavior-preserving code improvements
 - `ce:optimizing-performance` - Measurement-driven optimization
 - `ce:handling-errors` - Error handling best practices
+- `ce:migrating-code` - Safe migration patterns for databases, APIs, and frameworks
 
 **Planning & Execution:**
 - `ce:writing-plans` - Create detailed implementation plans
@@ -229,8 +233,8 @@ This will be accessible as `@ce:my-agent`.
     └── ce/
         ├── .claude-plugin/
         │   └── plugin.json       # Plugin metadata
-        ├── commands/             # 7 commands (/ce:test, /ce:explain, etc.)
-        ├── skills/               # 12 skills (ce:writing-tests, etc.)
+        ├── commands/             # 10 commands (/ce:test, /ce:explain, etc.)
+        ├── skills/               # 13 skills (ce:writing-tests, etc.)
         ├── agents/               # 3 agents (@ce:architect, etc.)
         ├── hooks/                # Session automation
         └── references/           # Document templates (ADR, PRD, Technical Design)
