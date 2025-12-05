@@ -1,27 +1,38 @@
 ---
 description: Run tests and analyze failures
 argument-hint: "[test-command]"
-allowed-tools: Bash, BashOutput, Read, Grep
+allowed-tools: Task
 ---
 
-Run the project's test suite and analyze any failures.
+**DELEGATION ONLY**: Do NOT run any commands or investigate the codebase yourself. Your only job is to immediately invoke the `ce:easy` agent via Task tool, passing the prompt template below with `$ARGUMENTS` substituted.
 
-Arguments:
+## Task Prompt for Easy Agent
 
-- `$ARGUMENTS`: Optional custom test command (e.g., "yarn test", "pytest", "cargo test")
+```
+Run tests and analyze any failures.
 
-Process:
+User arguments: $ARGUMENTS
+(If provided, use as the test command. Otherwise, auto-detect.)
 
-1. Detect the test command automatically if not provided:
-   - Check for package.json (yarn test)
-   - Check for pytest.ini or setup.py (pytest)
-   - Check for Cargo.toml (cargo test)
-   - Check for Makefile with test target
-2. Run the tests
-3. If failures occur:
-   - Analyze the failure messages
-   - Identify the root causes
-   - Suggest fixes with file:line references
-4. Report summary of test results
+**Step 1: Detect the test command** (if no custom command provided)
+- Check for package.json (yarn test or npm test)
+- Check for pytest.ini or setup.py (pytest)
+- Check for Cargo.toml (cargo test)
+- Check for Makefile with test target
+- Check for go.mod (go test ./...)
 
-Provide clear, actionable feedback on test failures.
+**Step 2: Run the tests**
+Execute the detected or provided test command.
+
+**Step 3: Analyze failures** (if any occur)
+- Parse the failure messages
+- Identify root causes
+- Reference specific file:line locations
+- Suggest fixes
+
+**Step 4: Report results**
+Provide a summary including:
+- Total tests run
+- Passed/failed/skipped counts
+- For failures: clear, actionable feedback
+```

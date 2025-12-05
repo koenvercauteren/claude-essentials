@@ -81,9 +81,9 @@ Expert AI personas for complex work, accessed with `@ce:` prefix:
 | ----------------------------------------------------------------- | ------------------------------------------------------- |
 | [@ce:architect](plugins/ce/agents/architect.md)                   | System design and architectural planning with diagrams  |
 | [@ce:code-reviewer](plugins/ce/agents/code-reviewer.md)           | Comprehensive PR/MR reviews enforcing standards         |
-| [@ce:commit](plugins/ce/agents/commit.md)                         | Autonomous git specialist for semantic commit messages  |
-| [@ce:complex-doc-writer](plugins/ce/agents/complex-doc-writer.md) | Multi-file markdown documentation and architecture docs |
 | [@ce:code-commenter](plugins/ce/agents/code-commenter.md)         | Single-file code comment auditing and cleanup           |
+| [@ce:complex-doc-writer](plugins/ce/agents/complex-doc-writer.md) | Multi-file markdown documentation and architecture docs |
+| [@ce:easy](plugins/ce/agents/easy.md)                             | Lightweight Haiku agent for simple delegated tasks      |
 | [@ce:log-reader](plugins/ce/agents/log-reader.md)                 | Efficient log file analysis using targeted search       |
 
 ### Reference Templates
@@ -259,7 +259,7 @@ This will be accessible as `@ce:my-agent`.
         │   └── plugin.json       # Plugin metadata
         ├── commands/             # 12 commands (/ce:test, /ce:plan, etc.)
         ├── skills/               # 14 skills (ce:writing-tests, etc.)
-        ├── agents/               # 6 agents (@ce:architect, @ce:commit, etc.)
+        ├── agents/               # 6 agents (@ce:architect, @ce:easy, etc.)
         ├── hooks/                # Session automation
         └── references/           # Document templates (ADR, PRD, Technical Design)
 ```
