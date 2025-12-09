@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # SessionStart hook for injecting skills awareness and activation instructions
 # Skills are loaded on-demand via the Skill tool (progressive disclosure pattern)
-# Updates project CLAUDE.md with available skills (idempotent) so that subagents gain access to the skills list
+# Updates global ~/.claude/CLAUDE.md with available skills (idempotent) so subagents also see them
 # Implements "Diff & Patch" to avoid double-injecting context if CLAUDE.md is already up to date
 
 set -euo pipefail
@@ -126,7 +126,8 @@ ${example_block}
 </INSTRUCTION>"
 
     # 2. Determine paths and flags
-    PROJECT_CLAUDE_MD="${PLUGIN_ROOT}/../../CLAUDE.md"
+    # Write to global CLAUDE.md so subagents also see the skills list
+    PROJECT_CLAUDE_MD="$HOME/.claude/CLAUDE.md"
     SHOULD_UPDATE=false
 
     # 3. Check if file exists and compare content
