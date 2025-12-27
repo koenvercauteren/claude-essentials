@@ -68,15 +68,39 @@ Load the skill first: `Skill(ce:executing-plans)`
    - Show the high-level task/phase breakdown
    - For multi-file plans, show the phase table with current progress
 
-2. **Ask clarifying questions if needed:**
+2. **Assess plan size and decide on worktree:**
+
+   **Large tasks (use worktree):**
+   - Multiple phases or task groups
+   - 5+ individual tasks
+   - Touches 3+ subsystems/directories
+   - Estimated significant refactoring or new features
+
+   **Small tasks (no worktree needed):**
+   - Single phase with few tasks
+   - Fewer than 5 tasks total
+   - Localized changes to 1-2 areas
+   - Bug fixes or minor enhancements
+
+   If unsure, default to using a worktree for safety.
+
+3. **Ask clarifying questions if needed:**
    - Ambiguous requirements
    - Missing context that can't be inferred
    - Unclear dependencies or ordering
 
-3. **Confirm execution:**
-   Ask: "Ready to execute this plan? This will run tasks autonomously and commit changes as each task completes."
+4. **Confirm execution:**
+   - For small tasks: "Ready to execute this plan? This will run tasks autonomously and commit changes as each task completes."
+   - For large tasks: "This is a larger task. I'll create a git worktree on a feature branch, execute there, then merge back to main when complete. Ready to proceed?"
 
-4. **Execute:**
+5. **Set up worktree (if needed):**
+   ```bash
+   # Derive branch name from plan name (kebab-case)
+   git worktree add ../worktree-<plan-name> -b feature/<plan-name>
+   cd ../worktree-<plan-name>
+   ```
+
+6. **Execute:**
    Follow the `Skill(ce:executing-plans)` workflow - it handles:
    - Dependency analysis and wave computation
    - Parallel task execution
@@ -85,3 +109,21 @@ Load the skill first: `Skill(ce:executing-plans)`
    - Final verification and code review
    - Archiving completed plan to `done/` folder
    - Completion summary
+
+### Post-Execution (worktree only):
+
+If a worktree was created:
+
+1. **Merge back to main:**
+   ```bash
+   cd <original-repo>
+   git merge feature/<plan-name> --no-ff -m "Merge feature/<plan-name>: <plan-summary>"
+   ```
+
+2. **Clean up worktree:**
+   ```bash
+   git worktree remove ../worktree-<plan-name>
+   git branch -d feature/<plan-name>
+   ```
+
+3. **Notify user:** "Plan complete. Changes merged to main and worktree cleaned up."
