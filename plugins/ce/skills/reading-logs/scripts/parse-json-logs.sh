@@ -1,21 +1,23 @@
 #!/usr/bin/env bash
 # Parse JSON/JSONL logs with jq
-# Usage: parse-json-logs.sh <log-file> [jq-filter]
+# Usage: parse-json-logs.sh <log-file> [jq-filter] [limit]
 # Examples:
-#   parse-json-logs.sh app.log                           # Pretty print all
-#   parse-json-logs.sh app.log '.level == "error"'       # Filter by level
-#   parse-json-logs.sh app.log 'select(.status >= 500)'  # Filter by status
+#   parse-json-logs.sh app.log                              # Pretty print all
+#   parse-json-logs.sh app.log 'select(.level == "error")'  # Filter by level
+#   parse-json-logs.sh app.log 'select(.status >= 500)' 100 # Filter with limit
 
 set -euo pipefail
 
 log_file="${1:-}"
 jq_filter="${2:-.}"
+limit="${3:-0}"
 
 if [[ -z "$log_file" ]]; then
-    echo "Usage: parse-json-logs.sh <log-file> [jq-filter]" >&2
+    echo "Usage: parse-json-logs.sh <log-file> [jq-filter] [limit]" >&2
     echo "Examples:" >&2
     echo "  parse-json-logs.sh app.log" >&2
     echo "  parse-json-logs.sh app.log 'select(.level == \"error\")'" >&2
+    echo "  parse-json-logs.sh app.log '.message' 50" >&2
     exit 1
 fi
 
@@ -31,23 +33,50 @@ if ! command -v jq &> /dev/null; then
     exit 1
 fi
 
-# Detect format and process
-# Try newline-delimited JSON first (most common for logs)
-first_char=$(head -c 1 "$log_file")
+# Detect format based on first non-empty line
+first_char=$(grep -m1 -o '^.' "$log_file" 2>/dev/null || echo "")
 
+process_jsonl() {
+    # Process newline-delimited JSON efficiently
+    # Skip non-JSON lines gracefully, apply filter
+    if [[ "$limit" -gt 0 ]]; then
+        jq -c "select(. != null) | $jq_filter" "$log_file" 2>/dev/null | head -n "$limit" | jq .
+    else
+        jq -c "select(. != null) | $jq_filter" "$log_file" 2>/dev/null | jq .
+    fi
+}
+
+process_json_array() {
+    # Process JSON array format
+    if [[ "$limit" -gt 0 ]]; then
+        jq ".[:$limit][] | $jq_filter" "$log_file"
+    else
+        jq ".[] | $jq_filter" "$log_file"
+    fi
+}
+
+# Try to process based on detected format
 if [[ "$first_char" == "[" ]]; then
-    # JSON array format
-    jq "$jq_filter" "$log_file"
+    process_json_array
+elif [[ "$first_char" == "{" ]]; then
+    process_jsonl
 else
-    # Newline-delimited JSON (JSONL)
-    # Use -c for compact output, handle non-JSON lines gracefully
+    # Mixed format - try line by line with error handling
+    echo "Warning: Log file may contain non-JSON lines, processing line by line..." >&2
+    count=0
     while IFS= read -r line || [[ -n "$line" ]]; do
-        # Skip empty lines
+        # Skip empty lines and non-JSON
         [[ -z "$line" ]] && continue
+        [[ "${line:0:1}" != "{" ]] && continue
 
-        # Try to parse as JSON, skip if invalid
-        if echo "$line" | jq -e . &>/dev/null; then
-            echo "$line" | jq "$jq_filter" 2>/dev/null || true
+        # Apply filter
+        result=$(echo "$line" | jq -e "$jq_filter" 2>/dev/null) || continue
+        [[ -n "$result" && "$result" != "null" ]] && echo "$result" | jq .
+
+        # Check limit
+        if [[ "$limit" -gt 0 ]]; then
+            ((count++))
+            [[ "$count" -ge "$limit" ]] && break
         fi
     done < "$log_file"
 fi

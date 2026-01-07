@@ -54,13 +54,19 @@ grep -Ei "$severity" "$log_file" | \
         s/[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}[.0-9]*Z?//g
         # Strip syslog timestamps
         s/^[A-Z][a-z]{2} [ 0-9][0-9] [0-9]{2}:[0-9]{2}:[0-9]{2}//g
-        # Strip epoch timestamps
+        # Strip common log prefix timestamps (2024-01-15 10:30:45)
+        s/[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}[.0-9]*//g
+        # Strip epoch timestamps (10-13 digits)
         s/[0-9]{10,13}//g
         # Strip UUIDs
         s/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}//gi
         # Strip hex strings (8+ chars)
         s/0x[0-9a-f]{8,}//gi
-        # Strip standalone numbers
+        # Strip IP addresses
+        s/[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}//g
+        # Strip port numbers after colon
+        s/:[0-9]{2,5}\b//g
+        # Strip standalone numbers (but keep ones in words)
         s/[[:space:]][0-9]+[[:space:]]/ /g
         # Normalize whitespace
         s/[[:space:]]+/ /g

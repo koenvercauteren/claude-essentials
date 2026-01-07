@@ -1,16 +1,14 @@
 # Tactical Debugging Techniques
 
-Use these tactical techniques when executing the systematic debugging process to gather evidence and isolate problems.
-
 ## Contents
 
 - [Binary Search / Code Bisection](#binary-search--code-bisection)
 - [Minimal Reproduction](#minimal-reproduction)
-- [Strategic Logging & Instrumentation](#strategic-logging--instrumentation)
+- [Strategic Logging](#strategic-logging)
 - [Runtime Assertions](#runtime-assertions)
 - [Differential Analysis](#differential-analysis)
-- [Multi-Component System Debugging](#multi-component-system-debugging)
-- [Backward Tracing for Deep Call Stack Errors](#backward-tracing-for-deep-call-stack-errors)
+- [Multi-Component Instrumentation](#multi-component-instrumentation)
+- [Backward Tracing](#backward-tracing)
 
 ## Binary Search / Code Bisection
 
@@ -21,176 +19,134 @@ Systematically narrow down the problem:
 3. If bug disappears, problem is in the disabled half
 4. Repeat until you isolate the exact line
 
-Also useful: `git bisect` to find which commit introduced a bug
+**Git bisect for regression hunting:**
 
-**Example:**
 ```bash
-# Find the commit that broke tests
 git bisect start
-git bisect bad HEAD  # Current version is broken
-git bisect good v2.1.0  # v2.1.0 was working
-# Git will check out middle commit - run tests
-npm test
-git bisect good  # or 'bad' depending on result
-# Repeat until git identifies the breaking commit
+git bisect bad HEAD
+git bisect good v2.1.0
+# Run tests, mark good/bad, repeat until commit identified
 ```
 
 ## Minimal Reproduction
 
-Strip away everything non-essential to isolate the issue:
+Strip away everything non-essential:
 
 - Remove unrelated features, components, dependencies
 - Use hardcoded data instead of complex data flows
 - Simplify to the smallest code that reproduces the bug
-- Creates a focused test case that reveals the root cause
 
-**Benefits:**
-- Eliminates confounding variables
-- Makes the actual problem visible
-- Easier to reason about and test
-- Often reveals the bug during the simplification process
+Often reveals the bug during the simplification process.
 
-## Strategic Logging & Instrumentation
+## Strategic Logging
 
-Add diagnostic output at key points to gather evidence:
+Add diagnostic output at key points:
+
+```javascript
+// Track values and types
+console.log('Type:', typeof value, 'Value:', value)
+console.log('Object keys:', Object.keys(object))
+
+// Track timing
+const start = performance.now()
+await operation()
+console.log(`Took ${performance.now() - start}ms`)
+```
 
 ```python
-# Trace execution flow
-print(f"1. Starting with: {input_data}")
-result = process(input_data)
-print(f"2. After processing: {result}")
-print(f"3. Type: {type(result)}, Length: {len(result) if hasattr(result, '__len__') else 'N/A'}")
-```
-
-```javascript
-// Verify assumptions
-console.log('Type:', typeof value, 'Value:', value)
-console.log('Is truthy:', !!value)
-console.log('Is null/undefined:', value == null)
-console.log('Object keys:', Object.keys(object))
-console.log('Array length:', array?.length)
-```
-
-```javascript
-// Track timing and performance
-const start = performance.now()
-await longOperation()
-console.log(`Operation took ${performance.now() - start}ms`)
+# Trace execution
+print(f"Input: {data}, Type: {type(data)}")
+result = process(data)
+print(f"Output: {result}")
 ```
 
 ```bash
-# Debug script execution
 set -x  # Print each command before executing
-set -e  # Exit on first error
-echo "DEBUG: Variable value is: $MY_VAR"
+echo "DEBUG: $MY_VAR"
 ```
 
-**Strategic placement:**
+**Place logging:**
 - Before/after critical operations
 - At component boundaries
 - Where data transforms
-- Where assumptions are made
 - In error handlers
 
 ## Runtime Assertions
 
-Make assumptions explicit and fail fast when they're violated:
+Make assumptions explicit:
 
 ```javascript
-// Validate preconditions
 if (!user) throw new Error('User should be authenticated here')
-if (items.length === 0) console.warn('Unexpected empty items array')
-if (typeof id !== 'string') throw new TypeError(`Expected string ID, got ${typeof id}`)
+if (typeof id !== 'string') throw new TypeError(`Expected string, got ${typeof id}`)
 ```
 
 ```python
-# Python assertions
 assert user is not None, "User should be authenticated"
-assert len(items) > 0, "Items should not be empty"
 assert isinstance(id, str), f"Expected str, got {type(id)}"
 ```
 
-**Benefits:**
-- Catches bad state early
-- Documents assumptions in code
-- Provides clear error messages
-- Helps narrow down where logic breaks
-
 ## Differential Analysis
 
-Compare working vs broken states to identify differences:
+Compare working vs broken states:
 
-- **Version comparison:** Working code in old version vs broken in new version
-- **Environment comparison:** Working environment vs broken environment
-- **Data comparison:** Working input vs problematic input
-- **Configuration comparison:** Working settings vs broken settings
-
-**Process:**
-1. Identify a working baseline
-2. Identify the broken case
-3. List every difference between them
+1. Identify working baseline
+2. Identify broken case
+3. List every difference
 4. Test each difference in isolation
-5. Find which difference causes the failure
 
-**Example:**
 ```bash
-# Compare environment variables
+# Compare environments
 diff <(env | sort) <(docker exec container env | sort)
 
-# Compare configuration files
+# Compare configs
 diff config/production.json config/staging.json
-
-# Compare dependency versions
-diff <(npm list --depth=0) old-package-lock.json
 ```
 
-## Multi-Component System Debugging
+## Multi-Component Instrumentation
 
-**WHEN system has multiple components (CI → build → signing, API → service → database):**
+**For systems with multiple layers (CI -> build -> deploy, API -> service -> database):**
 
-**BEFORE proposing fixes, add diagnostic instrumentation:**
-
-```
-For EACH component boundary:
-  - Log what data enters component
-  - Log what data exits component
-  - Verify environment/config propagation
-  - Check state at each layer
-
-Run once to gather evidence showing WHERE it breaks
-THEN analyze evidence to identify failing component
-THEN investigate that specific component
-```
-
-**Example (multi-layer system):**
+Add logging at EACH component boundary before proposing fixes:
 
 ```bash
-# Layer 1: Workflow
-echo "=== Secrets available in workflow: ==="
-echo "IDENTITY: ${IDENTITY:+SET}${IDENTITY:-UNSET}"
+# Layer 1: Entry point
+echo "=== Input received: ==="
+echo "PARAM: ${PARAM:+SET}${PARAM:-UNSET}"
 
-# Layer 2: Build script
-echo "=== Env vars in build script: ==="
-env | grep IDENTITY || echo "IDENTITY not in environment"
+# Layer 2: Processing
+echo "=== After processing: ==="
+env | grep PARAM
 
-# Layer 3: Signing script
-echo "=== Keychain state: ==="
-security list-keychains
-security find-identity -v
-
-# Layer 4: Actual signing
-codesign --sign "$IDENTITY" --verbose=4 "$APP"
+# Layer 3: Output
+echo "=== Final state: ==="
+cat output.json
 ```
 
-**This reveals:** Which layer fails (secrets → workflow ✓, workflow → build ✗)
+Run once to see WHERE it breaks, THEN investigate that component.
 
-## Backward Tracing for Deep Call Stack Errors
+## Backward Tracing
 
-**WHEN error is deep in call stack:**
+When error is deep in call stack, trace backward to find origin:
 
-- Where does bad value originate?
-- What called this with bad value?
-- Keep tracing up until you find the source
-- Fix at source, not at symptom
+```
+Symptom: git init creates .git in wrong directory
+Why? → cwd parameter is empty string
+Why? → projectDir passed empty
+Why? → tempDir uninitialized when accessed
+Why? → Variable accessed before beforeEach ran
+Root Cause: Test setup timing issue
+```
 
-For complex cases, see the `root-cause-tracing` skill for detailed backward tracing techniques.
+**Adding instrumentation:**
+
+```javascript
+async function problematicFunction(param) {
+  console.error("DEBUG:", {
+    param,
+    stack: new Error().stack
+  });
+  // ... rest of function
+}
+```
+
+Fix at the source, not at the symptom.
