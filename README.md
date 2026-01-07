@@ -25,6 +25,7 @@ Quick workflows for everyday development tasks, accessed with `/ce:` prefix:
 | [/ce:document](plugins/ce/commands/document.md)   | Create or improve documentation                       |
 | [/ce:plan](plugins/ce/commands/plan.md)           | Create a detailed implementation plan                 |
 | [/ce:execute](plugins/ce/commands/execute.md)     | Execute an implementation plan from the plans folder  |
+| [/ce:design](plugins/ce/commands/design.md)       | Start a design session                                |
 
 ### Skills
 
@@ -56,11 +57,12 @@ Reusable development patterns, accessed with `ce:` prefix:
 
 **Planning & Execution:**
 
-| Skill                                                            | Description                                               |
-| ---------------------------------------------------------------- | --------------------------------------------------------- |
-| [ce:writing-plans](plugins/ce/skills/writing-plans/SKILL.md)                 | Create detailed implementation plans                      |
-| [ce:executing-plans](plugins/ce/skills/executing-plans/SKILL.md)             | Execute plans in controlled batches                       |
-| [ce:architecting-systems](plugins/ce/skills/architecting-systems/SKILL.md)   | Design scalable architectures and technical documentation |
+| Skill                                                                      | Description                                               |
+| -------------------------------------------------------------------------- | --------------------------------------------------------- |
+| [ce:writing-plans](plugins/ce/skills/writing-plans/SKILL.md)               | Create detailed implementation plans                      |
+| [ce:executing-plans](plugins/ce/skills/executing-plans/SKILL.md)           | Execute plans in controlled batches                       |
+| [ce:architecting-systems](plugins/ce/skills/architecting-systems/SKILL.md) | Design scalable architectures and technical documentation |
+| [ce:design](plugins/ce/skills/design/SKILL.md)                             | Frontend design skill                                     |
 
 **Documentation:**
 
